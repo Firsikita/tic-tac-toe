@@ -2,76 +2,110 @@ const CROSS = 'X';
 const ZERO = 'O';
 const EMPTY = ' ';
 
+let size = 3;
+let field;
+let movesCount = 0;
+let isGameOver = false;
 const container = document.getElementById('fieldWrapper');
 
 startGame();
 addResetListener();
 
-function startGame () {
-    renderGrid(3);
+function startGame() {
+    isGameOver = false;
+    movesCount = 0;
+    field = Array.from({ length: size }, () => Array(size).fill(EMPTY));
+    renderGrid(size);
 }
 
-function renderGrid (dimension) {
-    container.innerHTML = '';
+function cellClickHandler(row, col) {
+    if (isGameOver) return;
+    if (field[row][col] !== EMPTY) return;
 
-    for (let i = 0; i < dimension; i++) {
-        const row = document.createElement('tr');
-        for (let j = 0; j < dimension; j++) {
-            const cell = document.createElement('td');
-            cell.textContent = EMPTY;
-            cell.addEventListener('click', () => cellClickHandler(i, j));
-            row.appendChild(cell);
+    field[row][col] = CROSS;
+    renderSymbolInCell(CROSS, row, col);
+    movesCount++;
+
+    const winnerX = checkWinner();
+    if (winnerX) {
+        endGame(winnerX);
+        return;
+    }
+
+    if (movesCount === size * size) {
+        alert('Победила дружба!');
+        isGameOver = true;
+        return;
+    }
+
+    aiMove();
+}
+
+function aiMove() {
+    if (isGameOver) return;
+
+    const emptyCells = [];
+    for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+            if (field[i][j] === EMPTY) {
+                emptyCells.push({ row: i, col: j });
+            }
         }
-        container.appendChild(row);
+    }
+
+    if (emptyCells.length === 0) return;
+
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    const { row, col } = emptyCells[randomIndex];
+    field[row][col] = ZERO;
+    renderSymbolInCell(ZERO, row, col);
+    movesCount++;
+
+    const winnerO = checkWinner();
+    if (winnerO) {
+        endGame(winnerO);
+        return;
+    }
+
+    if (movesCount === size * size) {
+        alert('Победила дружба!');
+        isGameOver = true;
     }
 }
 
-function cellClickHandler (row, col) {
-    // Пиши код тут
-    console.log(`Clicked on cell: ${row}, ${col}`);
 
 
-    /* Пользоваться методом для размещения символа в клетке так:
-        renderSymbolInCell(ZERO, row, col);
-     */
-}
-
-function renderSymbolInCell (symbol, row, col, color = '#333') {
+function renderSymbolInCell(symbol, row, col, color = '#333') {
     const targetCell = findCell(row, col);
-
     targetCell.textContent = symbol;
     targetCell.style.color = color;
 }
 
-function findCell (row, col) {
+function findCell(row, col) {
     const targetRow = container.querySelectorAll('tr')[row];
     return targetRow.querySelectorAll('td')[col];
 }
 
-function addResetListener () {
+function addResetListener() {
     const resetButton = document.getElementById('reset');
     resetButton.addEventListener('click', resetClickHandler);
 }
 
-function resetClickHandler () {
-    console.log('reset!');
+function resetClickHandler() {
+    startGame();
 }
 
-
-/* Test Function */
-/* Победа первого игрока */
-function testWin () {
-    clickOnCell(0, 2);
-    clickOnCell(0, 0);
+function testWin() {
+    clickOnCell(0, 2); 
+    clickOnCell(0, 0); 
     clickOnCell(2, 0);
-    clickOnCell(1, 1);
+    clickOnCell(1, 1); 
     clickOnCell(2, 2);
-    clickOnCell(1, 2);
-    clickOnCell(2, 1);
+    clickOnCell(1, 2); 
+    clickOnCell(2, 1); 
 }
 
-/* Ничья */
-function testDraw () {
+function testDraw() {
     clickOnCell(2, 0);
     clickOnCell(1, 0);
     clickOnCell(1, 1);
@@ -84,6 +118,6 @@ function testDraw () {
     clickOnCell(2, 2);
 }
 
-function clickOnCell (row, col) {
+function clickOnCell(row, col) {
     findCell(row, col).click();
 }
